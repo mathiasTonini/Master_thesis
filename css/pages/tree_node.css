@@ -1,0 +1,22 @@
+.tree-node {
+    padding-left: 0;
+  }
+  
+  .tree-node__children {
+    padding-left: 20px;
+  }
+  
+  .tree-node--open > .v-list-item {
+    font-weight: bold;
+  }
+
+
+  .tree-node__icon {
+    font-size: 20px; 
+    color: #666; 
+  }
+  
+  .tree-node__content {
+    display: flex;
+    align-items: center;
+  }
