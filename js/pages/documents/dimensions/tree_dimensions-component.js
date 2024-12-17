@@ -17,8 +17,8 @@ const treeDimTemplate = `
 </v-form> 
 <v-btn color="green" dark @click=getSelectedRef()>
     <v-icon left>mdi-plus</v-icon>
-        Add
-</v-btn>
+        Envoyer
+</v-btn> 
 `;
 
 const treeDimensionsComponent ={
@@ -51,12 +51,13 @@ const treeDimensionsComponent ={
             this.getDimensions();
         },
     },
+    inject: ['sendForm'], /*From parent => Allows to */
     data() {
         return {
             dimensions: [],
             xmlDoc:'',
             showForm: false,
-            selectedItems: []
+            selectedItems: {}
         }
     },
     provide() {
@@ -118,12 +119,25 @@ const treeDimensionsComponent ={
             };
         },
         getSelectedRef(){
-            console.log(this.selectedItems)
+            this.sendForm(this.selectedItems)
         },
         onUpdateSelection(node, value) {
             // Logique pour mettre à jour l'état global
-            console.log("the node", node)
-            console.log("is now:",value)
+
+            if(value){
+                if(this.selectedItems[node.dimId]===undefined){
+                    this.selectedItems[node.dimId] = [];
+                }
+                this.selectedItems[node.dimId].push(node)
+            }else{
+                let index = this.selectedItems[node.dimId].findIndex(el => el.id === node.id);
+                console.log("index: ",index)
+                this.selectedItems[node.dimId].splice(index,1)
+                if (this.selectedItems[node.dimId].length == 0){
+                    delete this.selectedItems[node.dimId];
+                }
+            }
+            console.log(this.selectedItems)
           },
     },
 

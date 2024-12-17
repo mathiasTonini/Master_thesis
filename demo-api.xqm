@@ -62,8 +62,44 @@ declare function local:gen-page-menu () as element()* {
 )
 };
 
-
-
+declare function local:build-chunks($doc as node(), $chunk as node()) as element(Chunk) {
+<Chunk>
+   <Memberships>
+   {
+        for $chunkMem in $chunk//Dim
+        return
+            let $dimension := $doc//Dimension[Id = $chunkMem/DimRef]
+              return
+                <Membership>
+                      <DimTitle>
+                        {$dimension/Title/text()}
+                      </DimTitle>
+                      {
+                        let $rubric := $dimension//Rubric[Id = $chunkMem/RubRef]
+                        return
+                          (
+                            <RubricName>
+                              {$rubric/Title/text()}
+                            </RubricName>,
+                            <ParentRubrics>
+                              {
+                                for $ancestor in $rubric/ancestor::Rubric
+                                return
+                                  <ParentRubric>
+                                    {$ancestor/Title/text()}
+                                  </ParentRubric>
+                              }
+                            </ParentRubrics>
+                          )
+                      }
+                    </Membership>
+              }
+              </Memberships>
+                <value>
+                    {$chunk/Content/Value/text()}
+                </value>
+    </Chunk>
+};
 
 
 (: --------------------------------------------------------------------------------------------------------- :)
@@ -325,75 +361,103 @@ declare
     return
       <Root>
         {
-          for $chunk in $doc//Information/Chunk
+          for $chunk in $doc//Chunk
           return
-            <Chunk>
-              <Memberships>
-              {
-                for $chunkMem in $chunk//Dim
-                return
-                  let $dimension := $doc//Dimension[Id = $chunkMem/DimRef]
-                  return
-                    <Membership>
-                      <DimTitle>
-                        {$dimension/Title/text()}
-                      </DimTitle>
-                      {
-                        let $rubric := $dimension//Rubric[Id = $chunkMem/RubRef]
-                        return
-                          (
-                            <RubricName>
-                              {$rubric/Title/text()}
-                            </RubricName>,
-                            <ParentRubrics>
-                              {
-                                for $ancestor in $rubric/ancestor::Rubric
-                                return
-                                  <ParentRubric>
-                                    {$ancestor/Title/text()}
-                                  </ParentRubric>
-                              }
-                            </ParentRubrics>
-                          )
-                      }
-                    </Membership>
-              }
-              </Memberships>
-                <value>
-                    {$chunk/Content/Value/text()}
-                </value>
-            </Chunk>
+              local:build-chunks($doc, $chunk)
         }
       </Root>
 };
+
+declare
+  %rest:GET
+  %rest:path("/demo/api/documents/filter-chunks")
+  %rest:query-param("fileName","{$file}")
+  %rest:query-param("DimRef","{$DimRefs}")
+  %rest:query-param("RubRef","{$RubRefs}")
+  %output:method("xml")
+function demo-api:get-filters-chunks(
+  $file ,
+  $DimRefs as xs:string*,
+  $RubRefs as xs:string*
+) as element(root) {
+
+  let $ka := max((count($DimRefs), count($RubRefs)))
+  let $pairs := 
+    for $i in 1 to $ka
+    return map {
+      "DimRef": $DimRefs[$i],
+      "RubRefs": if (exists($RubRefs[$i])) then $RubRefs[$i] else ()
+    }
+    (:  On regroupe les éléments ensemble :)
+    let $distinct-dimrefs := distinct-values(for $p in $pairs return $p("DimRef"))
+    let $rubrefs-by-dimref := 
+    for $d in $distinct-dimrefs
+        let $all-rubrefs := for $p in $pairs 
+                      where $p("DimRef") = $d
+                      return $p("RubRefs")
+      return map {
+        "DimRef": $d,
+        "RubRefs": $all-rubrefs
+      }
+    (: On recherche les Chunks :)  
+    let $doc := fn:doc(concat("/db/apps/demo/data/", $file, ".xml"))
+    let $filtered-chunks :=
+      for $chunk in $doc//Chunk
+        where every $dim-group in $rubrefs-by-dimref satisfies (
+        let $this-dim := $dim-group("DimRef"),
+            $allowed-rubrefs := $dim-group("RubRefs")
+        return
+          some $dim in $chunk/Membership/Dim satisfies
+            ($dim/DimRef = $this-dim and $dim/RubRef = $allowed-rubrefs)
+      )
+      return $chunk
+      return
+    <root>
+      {for $cleanChunk in $filtered-chunks
+        return 
+             local:build-chunks($doc, $cleanChunk)
+      }
+    </root>  
+};
+
+
 
 declare %rest:POST
         %rest:path("/demo/api/create-document")
          %rest:form-param("fileName","{$file-name}")
          %rest:form-param("data","{$data}")
 function demo-api:create-document($file-name,$data) as element() {
-
-    (: Récupérer les paramètres du JSON :)
     
-    (: Convertir la chaîne XML en un élément XML :)
-    let $xml-content := fn:parse-xml(concat("<root>",$data,"</root>"))
-    let $content-to-store := $xml-content/*
-    (: Décomposer l'URI en collection et nom de ressource :)
+    let $xml-content := fn:parse-xml(concat("<root><Table>",$data,"<Information></Information></Table></root>"))
+    let $content-to-store := $xml-content/root/*
     let $collection := "/db/apps/demo/data"
     let $resource := concat($file-name, ".xml")
     
-    (: Insérer le document :)
     let $ignore := xmldb:store($collection, $resource, $content-to-store)
-    
-    (: Retourner la réponse de succès :)
-    return
+        return
       element response {
         element status {"success"},
         element uri {concat($demo-api:short-url,"showdocument/documentName=", fn:encode-for-uri($file-name))}
       }
 };
 
-
+declare %rest:POST
+        %rest:path("/demo/api/add_data")
+        %rest:form-param("fileName","{$file-name}")
+        %rest:form-param("data","{$data}")
+function demo-api:add-data($file-name,$data) as element() {
+    let $xml-content := fn:parse-xml(concat("<root>",$data,"</root>"))
+    let $content-to-store := $xml-content/root/*
+    let $doc := doc(concat("/db/apps/demo/data/", $file-name, ".xml"))
+    let $_ := (update insert $content-to-store into $doc//Information)
+    return (
+        element response {
+            element status {"success"},
+            element uri {concat($demo-api:short-url,"showdocument/documentName=", fn:encode-for-uri($file-name))}
+        }
+    )
+   
+};
 
 
 

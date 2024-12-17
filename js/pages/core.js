@@ -74,7 +74,7 @@ function evaluateXPath(expression,document ,contextNode=document,stringValue= fa
 function objectToXml(obj, doc = document.implementation.createDocument('', '', null)) {
   function createElement(name, value) {
     // If we don't give a key for the first element
-    const sanitizedName = /^[a-zA-Z_]/.test(name) ? name : `tag_${name}`;
+    const sanitizedName = /^[a-zA-Z_]/.test(name) ?  name.replace(/_\$\d+\$/, '') : `tag_${name}`;
     const element = doc.createElement(sanitizedName);
 
     if (typeof value === 'object' && !Array.isArray(value)) {
