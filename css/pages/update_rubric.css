@@ -1,0 +1,48 @@
+
+.rubric-tree-container {
+  width: 100%; /* Prendre toute la largeur */
+  padding: 10px; /* Espacement interne */
+}
+
+.rubric-title {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.v-card {
+  width: 100%; /* Étendre la carte */
+  margin: 0; /* Supprime les marges */
+}
+
+.v-btn {
+  margin-left: 5px;
+}
+
+/* Différenciation des niveaux */
+.rubric-level {
+  padding-left: 10px;
+}
+
+.rubric-level-0 {
+  font-size: 1.2rem;
+  color: #000;
+}
+
+.rubric-level-1 {
+  padding-left: 20px;
+  font-size: 1rem;
+  color: #333;
+}
+
+.rubric-level-2 {
+  padding-left: 40px;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.rubric-level-3 {
+  padding-left: 60px;
+  font-size: 0.9rem;
+  color: #888;
+}
+

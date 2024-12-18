@@ -7,33 +7,10 @@ const dataTemplate = `
     class="data_grid-container"
     :style="{ gridTemplateColumns: 'repeat(' + item.dimensions.length + ', 1fr)' }"
   >
-    <!-- Première ligne : dimnames -->
-    <div
-      v-for="(dimension, i) in item.dimensions"
-      :key="'dimname-' + index + '-' + i"
-      class="data_header-cell"
-    >
-      {{ dimension.dimname }}
-    </div>
-
-    <!-- Deuxième ligne : Arbre des subRubrics menant à finalRubricName -->
-    <div
-      v-for="(dimension, i) in item.dimensions"
-      :key="'tree-' + index + '-' + i"
-      class="data_content-cell"
-    >
-      <treeNodeComponent :node="formatTreeItems(dimension)" />
-    </div>
-
-    <!-- Dernière ligne : value qui s'étend sur toutes les colonnes -->
-    <div
-      class="data_value-cell"
-      :style="{ gridColumn: 'span ' + item.dimensions.length }"
-    >
-      {{ item.value }}
-    </div>
+    <chunkComponent  :fileName="cleanDocName" :chunk="item"/>
   </div>
 </div>
+
 `;
 
 const dataComponent = {
@@ -42,7 +19,7 @@ const dataComponent = {
     props: ['cleanDocName'], 
     components: {
       addDataComponent,
-      treeNodeComponent,
+      chunkComponent,
     },
     watch: {
         cleanDocName(newVal, oldVal) {
@@ -81,23 +58,7 @@ const dataComponent = {
                 this.chunks.push(data)
             });
         },
-        formatTreeItems(dimension) {
-          const { subRubrics, finalRubricName } = dimension;
-      
-          let node = {
-            label: finalRubricName,
-            children: [],
-          };
-      
-          for (let i = subRubrics.length - 1; i >= 0; i--) {
-            node = {
-              label: subRubrics[i],
-              children: [node],
-            };
-          }
-      
-          return node;
-        },
+        
       },
     created() {
        

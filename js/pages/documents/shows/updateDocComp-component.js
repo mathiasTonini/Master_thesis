@@ -1,7 +1,6 @@
-const cardTemplate = `
+const updateDocTemplate = `
  <div>
     <h1>{{ docname }}</h1>
-    <!-- Utilisation de deux v-model avec des noms différents -->
     <div id="general_info">
       <p>Number of dimensions : {{ nbDim }}</p>
       <p>Number of rubrics : {{ nbRub }}</p>
@@ -9,32 +8,26 @@ const cardTemplate = `
     </div>
   </div>
   <v-tabs v-model="activeTab" fixed-tabs>
-      <v-tab>Preview</v-tab>
-      <v-tab>Data</v-tab>
-      <v-tab>Filters</v-tab>
+      <v-tab>Dimensions update</v-tab>
+      <v-tab>Rubrics update</v-tab>
     </v-tabs>
 
   <div v-show="activeTab === 0">
-      <docPreviewComponent v-model:cleanDocName="docname" />
+       <dimensionUpdate v-model:fileName="docname" /> 
     </div>
     <div v-show="activeTab === 1">
-      <dataComponent v-model:cleanDocName="docname" />
+      <rubricsUpdate v-model:fileName="docname" />
     </div>
-    <div v-show="activeTab === 2">
-      <filtersDataComponent v-model:cleanDocName="docname" />
-    </div>
-
 
 
 `;
-const showDocMainComponent = {
-    name: 'showDocMainComponent',
+const updateDocComponent = {
+    name: 'updateDocComponent',
     components: {
-      docPreviewComponent,
-      dataComponent,
-      filtersDataComponent,
+        dimensionUpdate,
+        rubricsUpdate,
     },
-    template: cardTemplate,
+    template: updateDocTemplate,
     data() {
         return {
           nbDim: 0, 
@@ -46,9 +39,7 @@ const showDocMainComponent = {
         };
       },
     methods: {
-        updateMessage() {
-            this.message = 'Le message a changé !';
-          },
+
         async getDocInfo(){
           let infos = await getXmlFromBackend("/api/documents/statistics/"+ this.docname);
           this.nbDim = evaluateXPath(".//nbDim/text()",infos, infos,true,true),
@@ -58,7 +49,6 @@ const showDocMainComponent = {
         }
     },
     created() {
-        console.log("in the card compoenent")
     },
     mounted(){
        this.docname = document.getElementById('docname').value

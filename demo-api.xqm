@@ -102,6 +102,8 @@ declare function local:build-chunks($doc as node(), $chunk as node()) as element
 };
 
 
+
+
 (: --------------------------------------------------------------------------------------------------------- :)
 (:                                      Application routes                                                   :)
 (: --------------------------------------------------------------------------------------------------------- :)
@@ -206,6 +208,7 @@ declare
        {util:binary-to-string(util:binary-doc('/db/apps/demo/css/pages/data.css'))}
        {util:binary-to-string(util:binary-doc('/db/apps/demo/css/pages/add_data.css'))}
        {util:binary-to-string(util:binary-doc('/db/apps/demo/css/pages/tree_node.css'))}
+       {util:binary-to-string(util:binary-doc('/db/apps/demo/css/pages/chunks.css'))}
     </style>
     {local:gen-page-header()}
     <body>
@@ -221,6 +224,7 @@ declare
         <script>
         {util:binary-to-string(util:binary-doc('/db/apps/demo/js/pages/documents/shows/show-data-tree-node.js'))}
         {util:binary-to-string(util:binary-doc('/db/apps/demo/js/pages/documents/dimensions/tree_dimensions-component.js'))}
+        {util:binary-to-string(util:binary-doc('/db/apps/demo/js/pages/documents/shows/chunks-component.js'))}
         {util:binary-to-string(util:binary-doc('/db/apps/demo/js/pages/documents/add_data/add-data-component.js'))}
         {util:binary-to-string(util:binary-doc('/db/apps/demo/js/pages/documents/filters/filters-data-component.js'))}
         {util:binary-to-string(util:binary-doc('/db/apps/demo/js/pages/documents/preview/documentsPreview-components.js'))}
@@ -232,6 +236,43 @@ declare
      
     </html>
  };
+ 
+ declare
+  %rest:GET
+  %rest:path("/demo/updateDocStruct/{$documentName}")
+  %output:method("html5")
+ function demo-api:update-documentStruct ($documentName as xs:string) as element(){
+ <html>
+    <style>
+        {util:binary-to-string(util:binary-doc('/db/apps/demo/css/pages/new_doc.css'))}
+        {util:binary-to-string(util:binary-doc('/db/apps/demo/css/pages/update_rubric.css'))}
+    </style>
+    {local:gen-page-header()}
+    <body>
+        <div id="document-update">
+        <input type="hidden" name="docname" id="docname" value="{$documentName}"/>
+            <v-app>   
+                {local:gen-page-menu()}
+                <v-main>                    
+                    <component v-bind:is="updateDocComp"></component>
+                </v-main>
+            </v-app>
+        </div>
+        <script>
+        {util:binary-to-string(util:binary-doc('/db/apps/demo/js/pages/documents/new/new-rubric-component.js'))}
+        {util:binary-to-string(util:binary-doc('/db/apps/demo/js/pages/documents/update/rubrics-tree-component.js'))}
+        {util:binary-to-string(util:binary-doc('/db/apps/demo/js/pages/documents/update/rubrics-update-component.js'))}
+        {util:binary-to-string(util:binary-doc('/db/apps/demo/js/pages/documents/update/dimensions-update-component.js'))}
+        {util:binary-to-string(util:binary-doc('/db/apps/demo/js/pages/documents/shows/updateDocComp-component.js'))}
+        {util:binary-to-string(util:binary-doc('/db/apps/demo/js/pages/documents/shows/updateDocument-app.js'))}       
+        </script>
+      </body>
+     
+    </html>
+ };
+ 
+ 
+ 
  
 declare
   %rest:GET
@@ -268,6 +309,13 @@ declare
 (: ========================================================================================================= :)
 (:                                      Application API                                                      :)
 (: ========================================================================================================= :)
+
+
+        (: ========================================================================================================= :)
+        (:                                      Application API   GET                                                :)
+        (: ========================================================================================================= :)
+
+
 
 declare
   %rest:GET
@@ -361,9 +409,9 @@ declare
     return
       <Root>
         {
-          for $chunk in $doc//Chunk
+          for $chunk in $doc//Information/Chunk
           return
-              local:build-chunks($doc, $chunk)
+            local:build-chunks($doc, $chunk)
         }
       </Root>
 };
@@ -376,10 +424,10 @@ declare
   %rest:query-param("RubRef","{$RubRefs}")
   %output:method("xml")
 function demo-api:get-filters-chunks(
-  $file ,
+  $file,
   $DimRefs as xs:string*,
   $RubRefs as xs:string*
-) as element(root) {
+) as element()* {
 
   let $ka := max((count($DimRefs), count($RubRefs)))
   let $pairs := 
@@ -399,7 +447,7 @@ function demo-api:get-filters-chunks(
         "DimRef": $d,
         "RubRefs": $all-rubrefs
       }
-    (: On recherche les Chunks :)  
+     (: On recherche les Chunks :)  
     let $doc := fn:doc(concat("/db/apps/demo/data/", $file, ".xml"))
     let $filtered-chunks :=
       for $chunk in $doc//Chunk
@@ -407,7 +455,7 @@ function demo-api:get-filters-chunks(
         let $this-dim := $dim-group("DimRef"),
             $allowed-rubrefs := $dim-group("RubRefs")
         return
-          some $dim in $chunk/Membership/Dim satisfies
+        some $dim in $chunk/Membership/Dim satisfies
             ($dim/DimRef = $this-dim and $dim/RubRef = $allowed-rubrefs)
       )
       return $chunk
@@ -420,7 +468,35 @@ function demo-api:get-filters-chunks(
     </root>  
 };
 
+declare
+  %rest:GET
+  %rest:path("/demo/api/documents/statistics/{$fileName}")
+  %output:method("xml")
+function demo-api:documents-list ($fileName) as element(Root) {
+    let $doc := fn:doc(concat("/db/apps/demo/data/", $fileName, ".xml"))
+    return 
+        <Root>
+            <nbDim>{count($doc//Dimension)}</nbDim>
+            <nbRub>{count($doc//Rubric)}</nbRub>
+            <nbData>{count($doc//Chunk)}</nbData>
+        </Root>    
+};
+declare
+  %rest:GET
+  %rest:path("/demo/api/documents/{$fileName}/dimensions")
+  %output:method("xml")
+function demo-api:documents-dimensions ($fileName) as element(Root) {
+    let $doc := fn:doc(concat("/db/apps/demo/data/", $fileName, ".xml"))
+    return 
+        <Root>
+            {$doc//Dimension}
+        </Root>    
+};
 
+
+        (: ========================================================================================================= :)
+        (:                                      Application API   POST                                               :)
+        (: ========================================================================================================= :)
 
 declare %rest:POST
         %rest:path("/demo/api/create-document")
@@ -458,6 +534,71 @@ function demo-api:add-data($file-name,$data) as element() {
     )
    
 };
+
+declare %rest:POST
+        %rest:path("/demo/api/add-dimensions")
+        %rest:form-param("fileName","{$file-name}")
+        %rest:form-param("data","{$data}")
+function demo-api:add-dim($file-name,$data) as element() {
+    let $xml-content := fn:parse-xml(concat("<root>",$data,"</root>"))
+    let $content-to-store := $xml-content/root/*
+    let $doc := doc(concat("/db/apps/demo/data/", $file-name, ".xml"))
+    let $_ := (update insert $content-to-store into $doc//Dimensions)
+    return (
+        element response {
+            element status {"success"},
+            element uri {concat($demo-api:short-url,"/document", fn:encode-for-uri($file-name))}
+        }
+    )
+   
+};
+
+
+declare %rest:POST
+        %rest:path("/demo/api/addRub")
+        %rest:form-param("fileName","{$file-name}")
+        %rest:form-param("data","{$data}")
+        %rest:form-param("parentId","{$parentId}")
+function demo-api:addRub($file-name,$data,$parentId) as element() {
+    let $xml-content := fn:parse-xml(concat("<root>",$data,"</root>"))
+    let $content-to-store := $xml-content/root/*
+    let $doc := doc(concat("/db/apps/demo/data/", $file-name, ".xml"))
+    let $_ := (update insert $content-to-store into $doc//Rubric[Id=$parentId]/Rubrics)
+    return (
+        element response {
+            element status {"success"}
+           
+        }
+    )
+   
+};
+        (: ========================================================================================================= :)
+        (:                                      Application API DELETE                                               :)
+        (: ========================================================================================================= :)
+
+declare
+  %rest:DELETE
+  %rest:path("/demo/api/deleteRubric/{$fileName}/{$rubId}")
+function demo-api:deleteRubric($fileName,$rubId) as map(*) {
+  let $doc := doc(concat("/db/apps/demo/data/", $fileName, ".xml"))
+  let $rub := $doc//Rubric[Id=$rubId]
+  let $rub-exists-before := exists($rub)    
+  let $deleted := (
+    if ($rub-exists-before) then (
+        update delete $rub,
+        not(exists($doc//rubric[Id=$rubId]))  (: Vérifier si le noeud a été supprimé :)
+    ) else (
+        false()
+    )
+   )
+
+    return
+      if ($deleted) then
+        map { "status": 200, "message": "Resource deleted successfully" }
+      else
+        map { "status": 404, "message": "Resource not found" }
+};
+
 
 
 

@@ -13,7 +13,7 @@ async function backendRequest (url) {
     });
 }
 
-async function backendPostRequest (url,data,redirection) {
+async function backendPostRequest (url,data,redirection= null) {
   return instance.post(url,data,{
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'
@@ -22,9 +22,16 @@ async function backendPostRequest (url,data,redirection) {
     if (resp.status === 200) {
       console.log(resp);
       console.log(redirection)
-
-      window.location.href = redirection;
+      if (redirection != null){
+        window.location.href = redirection;
+      }
     }
+  });
+}
+
+async function backendDeleteRequest(url){
+  return instance.delete(url).then((resp) => {
+    return resp.data;
   });
 }
 

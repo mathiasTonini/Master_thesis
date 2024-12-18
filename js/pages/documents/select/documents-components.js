@@ -42,16 +42,32 @@ const selectTemplate = `
     v-model="selectedDoc"
     @update:modelValue="changeDoc"
 ></v-select>
-<docPreviewComponent v-model:cleanDocName="cleanDocName"/>
-`
-;
+<docPreviewComponent v-model:cleanDocName="cleanDocName"/>`;
+const button = `
+<v-row class ="mt-5">
+  <v-col cols="auto">
+    <v-btn
+      color="primary"
+      size="large"
+      @click="showDoc()"
+    >
+      <v-icon left>mdi-database-search</v-icon>
+      Data
+    </v-btn>
+  </v-col>
 
-
-const button= `
-<v-col cols="auto">
-  <v-btn icon="mdi-open-in-new" size="large"  @click="showDoc()"></v-btn>
-</v-col>
-`
+  <v-col cols="auto">
+    <v-btn
+      color="secondary"
+      size="large"
+      @click="showUpdateDocStructure()"
+    >
+      <v-icon left>mdi-file-document-edit-outline</v-icon>
+      Document structure
+    </v-btn>
+  </v-col>
+</v-row>
+`;
 
 const documentTemplate = selectTemplate+ button;
 
@@ -88,6 +104,9 @@ const documentsComponent = {
       },
       showDoc(){
         window.location.href = '/exist/restxq/demo/showdocument/'+this.cleanDocName;
+      },
+      showUpdateDocStructure(){
+        window.location.href = '/exist/restxq/demo/updateDocStruct/'+this.cleanDocName;
       }
       
     },
