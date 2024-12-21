@@ -66,7 +66,30 @@ const button = `
       Document structure
     </v-btn>
   </v-col>
+  <v-col cols="auto">
+  <v-btn
+    color="error"
+    size="large"
+    @click="showDeleteDocumentModal()"
+  >
+    <v-icon left>mdi-delete-outline</v-icon> 
+   Delete Document
+  </v-btn>
+</v-col>
 </v-row>
+
+  <div v-if="showDeleteDocument" class="modal-overlay">
+      <div class="modal-content">
+        <h3>Delete document</h3>
+         <p>Are you sure to delete this document {{selectedDoc}} ?</p>
+        <div class="modal-buttons">
+          <button @click="confirmDelete" class="btn delete-btn">Confirm</button>
+          <button @click="closeDeleteDocumentModal" class="btn cancel-btn">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+
 `;
 
 const documentTemplate = selectTemplate+ button;
@@ -85,6 +108,7 @@ const documentsComponent = {
           ],
           cleanDocName: '',
           selectedDoc: '',
+          showDeleteDocument: false,
       }
     },
     methods: {
@@ -107,6 +131,18 @@ const documentsComponent = {
       },
       showUpdateDocStructure(){
         window.location.href = '/exist/restxq/demo/updateDocStruct/'+this.cleanDocName;
+      },
+      closeDeleteDocumentModal(){
+        this.showDeleteDocument = false
+      },
+      showDeleteDocumentModal(){
+        this.showDeleteDocument = true
+      },
+      confirmDelete(){
+        console.log("deleteting"+this.cleanDocName)
+        let url = "/api/deleteDocument/"+this.cleanDocName;
+        re = backendDeleteRequest(url,null);
+        window.location.href = '/exist/restxq/demo/documents'
       }
       
     },

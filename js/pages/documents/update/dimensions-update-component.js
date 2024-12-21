@@ -9,7 +9,7 @@ const dimensionsUpdateTemplate = `
           <v-list-item>
             <v-text-field
               v-model="dimension.Title"
-              label="Nom de la dimension"
+              label="Dimension name"
             ></v-text-field>
 
             <v-btn
@@ -35,7 +35,7 @@ const dimensionsUpdateTemplate = `
         color="primary"
         @click="addDimToDoc()"
       >
-        add the dimensions
+        Add the dimensions
       </v-btn>
 </div>
 `;

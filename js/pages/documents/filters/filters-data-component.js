@@ -70,19 +70,19 @@ const filtersDataTemplate= `
           }
           param = param.slice(0,-1);//Remove last "&"
           param = "?fileName="+this.cleanDocName+"&"+param
-          console.log(param)
           let url = "/api/documents/filter-chunks"+param
           this.getData(url)
         },
         async getData(url){
           this.xmlDoc = await getXmlFromBackend(url);
-          console.log(this.xmlDoc)
           xmlChunks = evaluateXPath("//Chunk",this.xmlDoc)
           xmlChunks.forEach(chunk => {
             memberships = evaluateXPath(".//Membership",this.xmlDoc, chunk);
             dimensions = [];
             memberships.forEach(membership =>{
               dim = {
+                dimRef: evaluateXPath(".//DimId/Id/text()",this.xmlDoc, membership,true,true),
+                rubRef: evaluateXPath(".//rubId/Id/text()",this.xmlDoc, membership,true,true),
                 dimname: evaluateXPath(".//DimTitle/text()",this.xmlDoc, membership,true,true),
                 finalRubricName: evaluateXPath("./RubricName/text()",this.xmlDoc, membership,true,true),
                 subRubrics: evaluateXPath("./ParentRubrics/ParentRubric/text()",this.xmlDoc, membership,true),

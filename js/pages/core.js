@@ -19,18 +19,20 @@ async function backendPostRequest (url,data,redirection= null) {
       'Content-Type': 'application/x-www-form-urlencoded'
     }
   }).then((resp) => {
+    console.log("resp",resp)
     if (resp.status === 200) {
-      console.log(resp);
-      console.log(redirection)
       if (redirection != null){
         window.location.href = redirection;
       }
+    }else{
+      console.log(resp)
     }
   });
 }
 
-async function backendDeleteRequest(url){
-  return instance.delete(url).then((resp) => {
+async function backendDeleteRequest(url,data=null){
+  return instance.delete(url,data).then((resp) => {
+    console.log("resp",resp)
     return resp.data;
   });
 }

@@ -45,6 +45,8 @@ const dataComponent = {
                 dimensions = [];
                 memberships.forEach(membership =>{
                   dim = {
+                    dimRef: evaluateXPath(".//DimId/Id/text()",this.xmlDoc, membership,true,true),
+                    rubRef: evaluateXPath(".//rubId/Id/text()",this.xmlDoc, membership,true,true),
                     dimname: evaluateXPath(".//DimTitle/text()",this.xmlDoc, membership,true,true),
                     finalRubricName: evaluateXPath("./RubricName/text()",this.xmlDoc, membership,true,true),
                     subRubrics: evaluateXPath("./ParentRubrics/ParentRubric/text()",this.xmlDoc, membership,true),

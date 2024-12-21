@@ -49,7 +49,7 @@ declare function local:gen-page-menu () as element()* {
 (
   <v-app-bar color="indigo">
     <v-app-bar-nav-icon v-on:click="toggleMenu"> </v-app-bar-nav-icon>
-    <v-toolbar-title>Demo association</v-toolbar-title>
+    <v-toolbar-title>Dimension Master</v-toolbar-title>
   </v-app-bar>,
   <v-navigation-drawer  v-model = "drawer" temporary="">
     <v-list v-model:opened="open" v-model:selected="selected">
@@ -71,6 +71,9 @@ declare function local:build-chunks($doc as node(), $chunk as node()) as element
             let $dimension := $doc//Dimension[Id = $chunkMem/DimRef]
               return
                 <Membership>
+                      <DimId>
+                          {$dimension/Id}
+                      </DimId>      
                       <DimTitle>
                         {$dimension/Title/text()}
                       </DimTitle>
@@ -78,6 +81,9 @@ declare function local:build-chunks($doc as node(), $chunk as node()) as element
                         let $rubric := $dimension//Rubric[Id = $chunkMem/RubRef]
                         return
                           (
+                            <rubId>
+                                {$rubric//Id}
+                            </rubId>,
                             <RubricName>
                               {$rubric/Title/text()}
                             </RubricName>,
@@ -171,6 +177,7 @@ declare
  <html>
     <style>
       {util:binary-to-string(util:binary-doc('/db/apps/demo/css/pages/document-preview.css'))}
+      {util:binary-to-string(util:binary-doc('/db/apps/demo/css/pages/modal.css'))}
     </style>
     
     {local:gen-page-header()}
@@ -209,6 +216,7 @@ declare
        {util:binary-to-string(util:binary-doc('/db/apps/demo/css/pages/add_data.css'))}
        {util:binary-to-string(util:binary-doc('/db/apps/demo/css/pages/tree_node.css'))}
        {util:binary-to-string(util:binary-doc('/db/apps/demo/css/pages/chunks.css'))}
+       {util:binary-to-string(util:binary-doc('/db/apps/demo/css/pages/modal.css'))}
     </style>
     {local:gen-page-header()}
     <body>
@@ -572,6 +580,88 @@ function demo-api:addRub($file-name,$data,$parentId) as element() {
     )
    
 };
+
+declare %rest:POST
+        %rest:path("/demo/api/update-value")
+        %rest:form-param("fileName","{$fileName}")
+        %rest:form-param("oldValue","{$oldValue}")
+        %rest:form-param("newValue","{$newValue}")
+        %rest:form-param("membership","{$memberships}")
+function demo-api:updateChunks(
+  $fileName,
+  $oldValue,
+  $newValue,
+  $memberships
+) as map(*) {
+
+  let $doc := doc(concat("/db/apps/demo/data/", $fileName, ".xml"))
+  (:   :let $chunks := $doc//Chunk :)
+    let $matchingChunk :=
+        for $chunk in $doc//Chunk
+          where $chunk/Content/Value = $oldValue
+            and (
+              every $membership in $memberships satisfies (
+                let $parsed := parse-json($membership)
+                let $dimMem := $parsed?dimMem
+                let $rubMem := $parsed?rubMem
+                return exists($chunk//Dim[DimRef = $dimMem and RubRef = $rubMem])
+              )
+            )
+          return $chunk
+
+  return
+    if (empty($matchingChunk)) then
+      map {
+        "status": "error",
+        "message": "No matching chunk found."
+      }
+    else (
+    update replace  $matchingChunk/Content/Value with <Value>{$newValue}</Value>,
+      map {
+        "status": "success",
+        "message": "Chunk updated successfully."
+      }
+    )
+};
+
+declare
+  %rest:POST
+  %rest:path("/demo/api/deleteChunks")
+  %rest:form-param("fileName","{$fileName}")
+  %rest:form-param("oldValue","{$oldValue}")
+  %rest:form-param("membership","{$memberships}")
+function demo-api:deleteChunks(
+  $fileName,
+  $oldValue,
+  $memberships
+) as element() {
+  let $doc := doc(concat("/db/apps/demo/data/", $fileName, ".xml"))
+  
+  (:   :let $chunks := $doc//Chunk :)
+   let $matchingChunk :=
+        for $chunk in $doc//Chunk
+          where $chunk/Content/Value = $oldValue
+            and (
+              every $membership in $memberships satisfies (
+                let $parsed := parse-json($membership)
+                let $dimMem := $parsed?dimMem
+                let $rubMem := $parsed?rubMem
+                return exists($chunk//Dim[DimRef = $dimMem and RubRef = $rubMem])
+              )
+            )
+          return $chunk
+
+  return
+    update delete $matchingChunk,
+       element response {
+            element status {"Success"}
+        }
+};
+
+
+
+
+
         (: ========================================================================================================= :)
         (:                                      Application API DELETE                                               :)
         (: ========================================================================================================= :)
@@ -598,6 +688,20 @@ function demo-api:deleteRubric($fileName,$rubId) as map(*) {
       else
         map { "status": 404, "message": "Resource not found" }
 };
+
+declare
+  %rest:DELETE
+  %rest:path("/demo/api/deleteDocument/{$fileName}")
+function demo-api:deleteDoc($fileName) as map(*) {
+ 
+  let $_ := xmldb:remove("/db/apps/demo/data/",concat($fileName,".xml"))
+  return
+    map { "status": 200, "message": "Resource deleted successfully" }
+
+};
+
+
+
 
 
 

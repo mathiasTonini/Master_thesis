@@ -9,7 +9,7 @@ const newRubricTemplate = `
     <v-list-item>
       <v-text-field
         v-model="currentRubrique.Rubric.Title"
-        label="Nom de la rubrique"
+        label="Rubric name"
       ></v-text-field>
      
       <v-btn
@@ -24,7 +24,7 @@ const newRubricTemplate = `
         color="primary"
         @click="addSubRubrique(currentRubrique.Rubric.Rubrics)"
       >
-        Ajouter une sous-rubrique
+        Add a sub-rubric
       </v-btn>
     </v-list-item>
 
@@ -39,7 +39,7 @@ const newRubricTemplate = `
         color="primary"
         @click="addRubrique()"
       >
-        Ajouter une rubrique
+       Add a rubric
       </v-btn>
   
   `;

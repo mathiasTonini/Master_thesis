@@ -56,7 +56,7 @@ template: addDataTemplate,
             }
             chunk = {
                 Content: content,
-                MemberShip: DimArr
+                Membership: DimArr
             }
             console.log("object, ",{ Chunk: chunk })
             console.log('data', objectToXml({ Chunk: chunk }));

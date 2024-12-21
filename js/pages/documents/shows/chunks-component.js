@@ -31,38 +31,38 @@ const chunkTemplate = `
              @click="openDeleteModal(index)" 
             class="btn delete-btn"
         >
-            Supprimer
+            Delete
         </button>
         <button 
             @click="openUpdateModal(index)" 
             class="btn update-btn"
         >
-            Mettre à jour
+            Update
         </button>
 </div>
  <div v-if="showModalDelete" class="modal-overlay">
       <div class="modal-content">
         <h3>Confirmation</h3>
-        <p>Êtes-vous sûr de vouloir supprimer cet élément ?</p>
+        <p>Are you sure to delete this chunk ?</p>
         <div class="modal-buttons">
-          <button @click="confirmDelete" class="btn delete-btn">Oui, Supprimer</button>
-          <button @click="closeDeleteModal" class="btn cancel-btn">Annuler</button>
+          <button @click="confirmDelete" class="btn delete-btn"> Delete</button>
+          <button @click="closeDeleteModal" class="btn cancel-btn">Cancel</button>
         </div>
       </div>
     </div>
   </div>
    <div v-if="showUpdateModal" class="modal-overlay">
       <div class="modal-content">
-        <h3>Mettre à jour la valeur</h3>
+        <h3>Updating data</h3>
         <input 
           v-model="newValue" 
           type="text" 
-          placeholder="Entrez la nouvelle valeur" 
+          placeholder="Enter the new Value" 
           class="modal-input"
         />
         <div class="modal-buttons">
-          <button @click="confirmUpdate" class="btn update-btn">Confirmer</button>
-          <button @click="closeUpdateModal" class="btn cancel-btn">Annuler</button>
+          <button @click="confirmUpdate" class="btn update-btn">Confirm</button>
+          <button @click="closeUpdateModal" class="btn cancel-btn">Cancel</button>
         </div>
       </div>
     </div>
@@ -89,7 +89,8 @@ const chunkComponent ={
     data() {
         return {
             showModalDelete: false,
-            showUpdateModal: false
+            showUpdateModal: false,
+            newValue: '',
         }
     },
     methods: {
@@ -123,23 +124,38 @@ const chunkComponent ={
             this.showUpdateModal = false;
           },
           confirmDelete(){
-            /*for (let dimId in items){
-                let dimension = dimId;
-                let rubRef = '';
-                items[dimId].forEach(rubric=>{
-                  param = param+"DimRef="+dimId+"&RubRef="+rubric.id+"&"
-                });
-                
-              }
-              param = param.slice(0,-1);//Remove last "&"
-              param = "?fileName="+this.fileName+"&"+param
-              console.log(param)
-            let url = */
+            const urlParams = new URLSearchParams();
+            urlParams.append('fileName', this.fileName);
+            urlParams.append('oldValue',this.chunk.value);
+            let memberships =[]
+            this.chunk.dimensions.forEach(dim =>{
+              let dimMem = dim.dimRef;
+              let rubMem = dim.rubRef;
+              memberships.push({dimMem,rubMem})
+            });
+            urlParams.append('$memberships',memberships);
+            re = backendPostRequest("/api/deleteChunks",urlParams);
+            this.chunk.value = "XXX DELETED";
+            this.closeDeleteModal();         
             console.log(this.chunk)
           },
           confirmUpdate(){
-            //todo
+            const urlParams = new URLSearchParams();
+            urlParams.append('fileName', this.fileName);
+            urlParams.append('newValue',this.newValue);
+            urlParams.append('oldValue',this.chunk.value);
+            let memberships =[]
+            this.chunk.dimensions.forEach(dim =>{
+              let dimMem = dim.dimRef;
+              let rubMem = dim.rubRef;
+              memberships.push({dimMem,rubMem})
+            });
+            urlParams.append('$memberships',memberships);
+            re = backendPostRequest("/api/update-value",urlParams);
+            this.chunk.value = this.newValue;
+            this.closeUpdateModal();
           }
+
     },
     created() {
        console.log("chunk component",this.chunk)
