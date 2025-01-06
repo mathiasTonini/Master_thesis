@@ -1,0 +1,29 @@
+.data_grid-container {
+  display: grid;
+  grid-gap: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #ccc;
+  padding: 15px;
+  border-radius: 5px;
+  background-color: #fafafa;
+}
+
+.data_header-cell {
+  font-weight: bold;
+  text-align: center;
+}
+
+.data_content-cell {
+  text-align: left;
+}
+
+.data_value-cell {
+  text-align: center;
+  background-color: #f0f0f0;
+  padding: 10px;
+  margin-top: 10px;
+  border-top: 1px solid #ddd;
+}
+
+
+

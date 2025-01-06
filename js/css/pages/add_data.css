@@ -1,0 +1,14 @@
+.add_data_form{
+    margin: 10px;
+    border: solid 1px black;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    text-align: left;
+}
+
+.add_data_main{
+    margin: 10px;
+    justify-content: center;
+    text-align: center;
+    background-color: #f9f9f9;
+}
